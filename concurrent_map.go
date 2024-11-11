@@ -1,4 +1,4 @@
-package concurrentmap
+package main
 
 import "sync"
 
@@ -9,7 +9,7 @@ type shard[K comparable, V any] struct {
 	mu    sync.RWMutex
 }
 
-type HashFunc[K comparable] func(key K) uint
+type HashFunc[K comparable] func(key K) uint32
 
 type ConcurrentMap[K comparable, V any] struct {
 	shards   []*shard[K, V]
