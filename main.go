@@ -3,9 +3,9 @@ package main
 import (
 	"hash/fnv"
 	"log"
+	"math/rand"
 	"net/http"
 	"net/http/pprof"
-	"strconv"
 	"time"
 )
 
@@ -15,21 +15,27 @@ func hashing(key string) uint32 {
 	return h.Sum32()
 }
 
+var m *ConcurrentMap[string, string]
+
 func main() {
+	rand.Seed(time.Now().UnixNano())
+	m = NewConcurrentMap[string, string](hashing)
 	mux := http.NewServeMux()
 	mux.Handle("/map", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		time.Sleep(10 * time.Second)
-		m := NewConcurrentMap[string, string](hashing)
-		for i := 0; i < 10000000; i++ {
-			m.Set(strconv.Itoa(i), "value")
-			if (i % 100000) == 0 {
-				time.Sleep(500 * time.Millisecond)
+		var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+		for i := 0; i < 10000; i++ {
+			b := make([]rune, 5)
+			for i := range b {
+				b[i] = letters[rand.Intn(len(letters))]
 			}
+			m.Set(string(b), "value")
 		}
 		w.Write([]byte("lock and load.."))
 		return
 	}))
 	mux.HandleFunc("/debug/pprof/", pprof.Index)
+	mux.HandleFunc("/debug/pprof/profile", pprof.Profile)
+	mux.HandleFunc("/debug/pprof/trace", pprof.Trace)
 	mux.HandleFunc("/debug/pprof/{action}", pprof.Index)
 	mux.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
 	server := http.Server{
