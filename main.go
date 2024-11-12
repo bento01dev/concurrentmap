@@ -1,13 +1,15 @@
 package main
 
 import (
-	cmap "github.com/orcaman/concurrent-map/v2"
 	"hash/fnv"
 	"log"
 	"math/rand"
 	"net/http"
 	"net/http/pprof"
+	"runtime"
 	"time"
+
+	cmap "github.com/orcaman/concurrent-map/v2"
 )
 
 func hashing(key string) uint32 {
@@ -22,6 +24,8 @@ var cm = cmap.New[string]()
 func main() {
 	rand.Seed(time.Now().UnixNano())
 	m = NewConcurrentMap[string, string](hashing)
+	runtime.SetBlockProfileRate(1)
+	runtime.SetMutexProfileFraction(1)
 	mux := http.NewServeMux()
 	mux.Handle("/map", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
