@@ -1,6 +1,7 @@
 package main
 
 import (
+	cmap "github.com/orcaman/concurrent-map/v2"
 	"hash/fnv"
 	"log"
 	"math/rand"
@@ -16,6 +17,7 @@ func hashing(key string) uint32 {
 }
 
 var m *ConcurrentMap[string, string]
+var cm = cmap.New[string]()
 
 func main() {
 	rand.Seed(time.Now().UnixNano())
